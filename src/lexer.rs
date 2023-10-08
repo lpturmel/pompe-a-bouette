@@ -28,14 +28,27 @@ impl Lexer {
 
     fn read_number(&mut self) -> Token {
         let position = self.position;
-        while self.ch.is_ascii_digit() {
+        let mut is_float = false;
+
+        while self.ch.is_ascii_digit() || self.ch == '.' {
+            if self.ch == '.' {
+                if is_float {
+                    break;
+                }
+                is_float = true;
+            }
             self.read_char();
         }
+
         let literal = &self.input[position..self.position];
-        Token::new(
-            TokenType::Int(literal.parse().unwrap()),
-            literal.to_string(),
-        )
+
+        let token_type = if is_float {
+            TokenType::Float(literal.parse().unwrap())
+        } else {
+            TokenType::Int(literal.parse().unwrap())
+        };
+
+        Token::new(token_type, literal.to_string())
     }
 
     pub fn next_token(&mut self) -> Token {
@@ -54,7 +67,7 @@ impl Lexer {
             _ => {
                 if self.is_letter() {
                     return self.read_identifier();
-                } else if self.ch.is_ascii_digit() {
+                } else if self.ch.is_ascii_digit() || self.ch == '.' {
                     return self.read_number();
                 } else {
                     return Token::new(TokenType::Illegal, "".to_string());
@@ -116,6 +129,27 @@ pub mod test {
             (TokenType::Ident("five".to_string()), "five"),
             (TokenType::Assign, "="),
             (TokenType::Int(5), "5"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::EOF, ""),
+        ];
+        let mut l = Lexer::new(input);
+        for (expected_type, expected_literal) in tokens {
+            let tok = l.next_token();
+            assert_eq!(tok.token_type, expected_type);
+            assert_eq!(tok.literal, expected_literal);
+        }
+    }
+    #[test]
+    fn test_float_assignment() {
+        let input = "let five_dot_zero = 5.0;";
+        let tokens = vec![
+            (TokenType::Let, "let"),
+            (
+                TokenType::Ident("five_dot_zero".to_string()),
+                "five_dot_zero",
+            ),
+            (TokenType::Assign, "="),
+            (TokenType::Float(5.0), "5.0"),
             (TokenType::Semicolon, ";"),
             (TokenType::EOF, ""),
         ];

@@ -26,6 +26,7 @@ pub enum TokenType {
     EOF,
     Ident(String),
     Int(i64),
+    Float(f64),
     // Operators
     Assign,
     Plus,
