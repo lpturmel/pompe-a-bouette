@@ -15,6 +15,12 @@ impl Token {
         match ident {
             "fn" => Self::new(TokenType::Fn, ident.to_string()),
             "let" => Self::new(TokenType::Let, ident.to_string()),
+            "mut" => Self::new(TokenType::Mut, ident.to_string()),
+            "true" => Self::new(TokenType::True, ident.to_string()),
+            "false" => Self::new(TokenType::False, ident.to_string()),
+            "if" => Self::new(TokenType::If, ident.to_string()),
+            "else" => Self::new(TokenType::Else, ident.to_string()),
+            "return" => Self::new(TokenType::Return, ident.to_string()),
             _ => Self::new(TokenType::Ident(ident.to_string()), ident.to_string()),
         }
     }
@@ -30,6 +36,12 @@ pub enum TokenType {
     // Operators
     Assign,
     Plus,
+    Minus,
+    Bang,
+    Asterisk,
+    Slash,
+    LT,
+    GT,
     // Delimiters
     Comma,
     Semicolon,
@@ -42,4 +54,10 @@ pub enum TokenType {
     // Keywords
     Fn,
     Let,
+    Mut,
+    True,
+    False,
+    If,
+    Else,
+    Return,
 }

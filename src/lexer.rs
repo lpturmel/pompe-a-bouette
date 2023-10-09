@@ -1,7 +1,7 @@
 use crate::token::{Token, TokenType};
 
 #[derive(Debug)]
-struct Lexer {
+pub struct Lexer {
     input: String,
     position: usize,
     read_position: usize,
@@ -26,6 +26,9 @@ impl Lexer {
         self.read_position += 1;
     }
 
+    /// Read a number and return the appropriate token
+    ///
+    /// This function will determine if the number is an integer or a float
     fn read_number(&mut self) -> Token {
         let position = self.position;
         let mut is_float = false;
@@ -51,6 +54,7 @@ impl Lexer {
         Token::new(token_type, literal.to_string())
     }
 
+    /// Consume the input and return the next token
     pub fn next_token(&mut self) -> Token {
         self.consume_whitespace();
 
@@ -61,13 +65,19 @@ impl Lexer {
             ')' => Token::new(TokenType::RParen, self.ch.to_string()),
             ',' => Token::new(TokenType::Comma, self.ch.to_string()),
             '+' => Token::new(TokenType::Plus, self.ch.to_string()),
+            '-' => Token::new(TokenType::Minus, self.ch.to_string()),
+            '!' => Token::new(TokenType::Bang, self.ch.to_string()),
+            '/' => Token::new(TokenType::Slash, self.ch.to_string()),
+            '*' => Token::new(TokenType::Asterisk, self.ch.to_string()),
+            '<' => Token::new(TokenType::LT, self.ch.to_string()),
+            '>' => Token::new(TokenType::GT, self.ch.to_string()),
             '{' => Token::new(TokenType::LBrace, self.ch.to_string()),
             '}' => Token::new(TokenType::RBrace, self.ch.to_string()),
             '\0' => Token::new(TokenType::EOF, "".to_string()),
             _ => {
                 if self.is_letter() {
                     return self.read_identifier();
-                } else if self.ch.is_ascii_digit() || self.ch == '.' {
+                } else if self.is_number() {
                     return self.read_number();
                 } else {
                     return Token::new(TokenType::Illegal, "".to_string());
@@ -77,12 +87,18 @@ impl Lexer {
         self.read_char();
         tok
     }
+    /// Checks if the current character is a number
+    fn is_number(&self) -> bool {
+        self.ch.is_ascii_digit() || self.ch == '.'
+    }
 
+    /// Consume all whitespace characters
     fn consume_whitespace(&mut self) {
         while self.ch.is_whitespace() {
             self.read_char();
         }
     }
+    /// Checks if the current character is an alphabetic character or an underscore
     fn is_letter(&self) -> bool {
         self.ch.is_alphabetic() || self.ch == '_'
     }
@@ -140,6 +156,33 @@ pub mod test {
         }
     }
     #[test]
+    fn test_from_file() {
+        let input = std::fs::read_to_string("input/nb.pab").unwrap();
+        let tokens = vec![
+            (TokenType::Let, "let"),
+            (TokenType::Ident("ten".to_string()), "ten"),
+            (TokenType::Assign, "="),
+            (TokenType::Int(10), "10"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Let, "let"),
+            (TokenType::Mut, "mut"),
+            (TokenType::Ident("twenty".to_string()), "twenty"),
+            (TokenType::Assign, "="),
+            (TokenType::Int(20), "20"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Ident("twenty".to_string()), "twenty"),
+            (TokenType::Assign, "="),
+            (TokenType::Int(30), "30"),
+            (TokenType::Semicolon, ";"),
+        ];
+        let mut l = Lexer::new(&input);
+        for (expected_type, expected_literal) in tokens {
+            let tok = l.next_token();
+            assert_eq!(tok.token_type, expected_type);
+            assert_eq!(tok.literal, expected_literal);
+        }
+    }
+    #[test]
     fn test_float_assignment() {
         let input = "let five_dot_zero = 5.0;";
         let tokens = vec![
@@ -170,6 +213,15 @@ let add = fn(x, y) {
 };
 
 let result = add(five, ten);
+!-/*5;
+5 < 10;
+
+
+if (5 < 10) {
+    return true;
+} else {
+    return false;
+}
         "#;
         let tokens = vec![
             (TokenType::Let, "let"),
@@ -208,6 +260,33 @@ let result = add(five, ten);
             (TokenType::Ident("ten".to_string()), "ten"),
             (TokenType::RParen, ")"),
             (TokenType::Semicolon, ";"),
+            (TokenType::Bang, "!"),
+            (TokenType::Minus, "-"),
+            (TokenType::Slash, "/"),
+            (TokenType::Asterisk, "*"),
+            (TokenType::Int(5), "5"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Int(5), "5"),
+            (TokenType::LT, "<"),
+            (TokenType::Int(10), "10"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::If, "if"),
+            (TokenType::LParen, "("),
+            (TokenType::Int(5), "5"),
+            (TokenType::LT, "<"),
+            (TokenType::Int(10), "10"),
+            (TokenType::RParen, ")"),
+            (TokenType::LBrace, "{"),
+            (TokenType::Return, "return"),
+            (TokenType::True, "true"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::RBrace, "}"),
+            (TokenType::Else, "else"),
+            (TokenType::LBrace, "{"),
+            (TokenType::Return, "return"),
+            (TokenType::False, "false"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::RBrace, "}"),
             (TokenType::EOF, ""),
         ];
         let mut l = Lexer::new(input);
