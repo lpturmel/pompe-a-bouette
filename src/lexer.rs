@@ -26,6 +26,10 @@ impl Lexer {
         self.read_position += 1;
     }
 
+    fn peek_char(&self) -> char {
+        self.input.chars().nth(self.read_position).unwrap_or('\0')
+    }
+
     /// Read a number and return the appropriate token
     ///
     /// This function will determine if the number is an integer or a float
@@ -59,14 +63,28 @@ impl Lexer {
         self.consume_whitespace();
 
         let tok = match self.ch {
-            '=' => Token::new(TokenType::Assign, self.ch.to_string()),
+            '=' => {
+                if self.peek_char() == '=' {
+                    self.read_char();
+                    Token::new(TokenType::EQ, "==".to_string())
+                } else {
+                    Token::new(TokenType::Assign, self.ch.to_string())
+                }
+            }
+            '!' => {
+                if self.peek_char() == '=' {
+                    self.read_char();
+                    Token::new(TokenType::NotEQ, "!=".to_string())
+                } else {
+                    Token::new(TokenType::Bang, self.ch.to_string())
+                }
+            }
             ';' => Token::new(TokenType::Semicolon, self.ch.to_string()),
             '(' => Token::new(TokenType::LParen, self.ch.to_string()),
             ')' => Token::new(TokenType::RParen, self.ch.to_string()),
             ',' => Token::new(TokenType::Comma, self.ch.to_string()),
             '+' => Token::new(TokenType::Plus, self.ch.to_string()),
             '-' => Token::new(TokenType::Minus, self.ch.to_string()),
-            '!' => Token::new(TokenType::Bang, self.ch.to_string()),
             '/' => Token::new(TokenType::Slash, self.ch.to_string()),
             '*' => Token::new(TokenType::Asterisk, self.ch.to_string()),
             '<' => Token::new(TokenType::LT, self.ch.to_string()),
@@ -222,6 +240,8 @@ if (5 < 10) {
 } else {
     return false;
 }
+10 == 10;
+10 != 9;
         "#;
         let tokens = vec![
             (TokenType::Let, "let"),
@@ -287,6 +307,14 @@ if (5 < 10) {
             (TokenType::False, "false"),
             (TokenType::Semicolon, ";"),
             (TokenType::RBrace, "}"),
+            (TokenType::Int(10), "10"),
+            (TokenType::EQ, "=="),
+            (TokenType::Int(10), "10"),
+            (TokenType::Semicolon, ";"),
+            (TokenType::Int(10), "10"),
+            (TokenType::NotEQ, "!="),
+            (TokenType::Int(9), "9"),
+            (TokenType::Semicolon, ";"),
             (TokenType::EOF, ""),
         ];
         let mut l = Lexer::new(input);
