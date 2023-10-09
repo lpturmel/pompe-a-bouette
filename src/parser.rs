@@ -32,7 +32,7 @@ impl<'a> Parser<'a> {
         self.errors.push(msg);
     }
     fn next_token(&mut self) {
-        self.cur_token = self.peek_token.clone();
+        std::mem::swap(&mut self.cur_token, &mut self.peek_token);
         self.peek_token = self.lexer.next_token();
     }
 
@@ -112,7 +112,9 @@ pub mod test {
         let lexer = &mut crate::lexer::Lexer::new(input);
         let mut parser = super::Parser::new(lexer);
 
+        let now = std::time::Instant::now();
         let p = parser.parse();
+        println!("parsing took {:?}", now.elapsed());
 
         if !parser.errors.is_empty() {
             println!("parser has {} errors", parser.errors.len());
@@ -122,8 +124,29 @@ pub mod test {
             panic!();
         }
 
-        println!("{:?}", p);
-
         assert_eq!(p.statements.len(), 3);
+    }
+    #[test]
+    fn parse_from_file() {
+        let input = std::fs::read_to_string("input/nb.pab").unwrap();
+
+        println!("input chars: {}", input.chars().count());
+
+        let lexer = &mut crate::lexer::Lexer::new(&input);
+        let mut parser = super::Parser::new(lexer);
+
+        let now = std::time::Instant::now();
+        let p = parser.parse();
+        println!("parsing took {:?}", now.elapsed());
+
+        if !parser.errors.is_empty() {
+            println!("parser has {} errors", parser.errors.len());
+            for error in parser.errors {
+                println!("parser error: {}", error);
+            }
+            panic!();
+        }
+
+        assert_eq!(p.statements.len(), 240);
     }
 }
