@@ -60,7 +60,7 @@ impl Repl {
     pub fn start(&mut self) {
         let welcome = format!(
             r#"
-            Welcome to Pompe a Bouette {}
+            Welcome to Pompe à Bouette {}
             This is the interactive REPL.
             Type .help for more information.
             "#,
