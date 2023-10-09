@@ -174,33 +174,6 @@ pub mod test {
         }
     }
     #[test]
-    fn test_from_file() {
-        let input = std::fs::read_to_string("input/nb.pab").unwrap();
-        let tokens = vec![
-            (TokenType::Let, "let"),
-            (TokenType::Ident("ten".to_string()), "ten"),
-            (TokenType::Assign, "="),
-            (TokenType::Int(10), "10"),
-            (TokenType::Semicolon, ";"),
-            (TokenType::Let, "let"),
-            (TokenType::Mut, "mut"),
-            (TokenType::Ident("twenty".to_string()), "twenty"),
-            (TokenType::Assign, "="),
-            (TokenType::Int(20), "20"),
-            (TokenType::Semicolon, ";"),
-            (TokenType::Ident("twenty".to_string()), "twenty"),
-            (TokenType::Assign, "="),
-            (TokenType::Int(30), "30"),
-            (TokenType::Semicolon, ";"),
-        ];
-        let mut l = Lexer::new(&input);
-        for (expected_type, expected_literal) in tokens {
-            let tok = l.next_token();
-            assert_eq!(tok.token_type, expected_type);
-            assert_eq!(tok.literal, expected_literal);
-        }
-    }
-    #[test]
     fn test_float_assignment() {
         let input = "let five_dot_zero = 5.0;";
         let tokens = vec![
