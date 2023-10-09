@@ -1,7 +1,6 @@
-use std::io::{BufRead, BufReader, Stdin};
-
 use crate::lexer::Lexer;
 use crate::token::TokenType;
+use std::io::{self, BufRead, BufReader, Stdin, Write};
 
 const PROMPT: &str = ">> ";
 
@@ -24,9 +23,17 @@ impl Repl {
     }
 
     pub fn start(&mut self) {
-        println!("Welcome to Pompe a Bouette!");
+        let welcome = format!(
+            r#"
+            Welcome to Pompe a Bouette {}
+            This is the interactive REPL.
+            "#,
+            env!("CARGO_PKG_VERSION")
+        );
+        println!("{}", welcome);
         loop {
             print!("{}", PROMPT);
+            io::stdout().flush().unwrap();
             let mut input = String::new();
             self.reader.read_line(&mut input).unwrap();
 
