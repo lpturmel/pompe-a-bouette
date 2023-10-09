@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
     pub literal: String,
@@ -21,18 +21,18 @@ impl Token {
             "if" => Self::new(TokenType::If, ident.to_string()),
             "else" => Self::new(TokenType::Else, ident.to_string()),
             "return" => Self::new(TokenType::Return, ident.to_string()),
-            _ => Self::new(TokenType::Ident(ident.to_string()), ident.to_string()),
+            _ => Self::new(TokenType::Ident, ident.to_string()),
         }
     }
 }
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TokenType {
     // Misc
     Illegal,
     EOF,
-    Ident(String),
-    Int(i64),
-    Float(f64),
+    Ident,
+    Int,
+    Float,
     // Operators
     Assign,
     Plus,

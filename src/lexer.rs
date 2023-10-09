@@ -50,9 +50,9 @@ impl Lexer {
         let literal = &self.input[position..self.position];
 
         let token_type = if is_float {
-            TokenType::Float(literal.parse().unwrap())
+            TokenType::Float
         } else {
-            TokenType::Int(literal.parse().unwrap())
+            TokenType::Int
         };
 
         Token::new(token_type, literal.to_string())
@@ -160,9 +160,9 @@ pub mod test {
         let input = "let five = 5;";
         let tokens = vec![
             (TokenType::Let, "let"),
-            (TokenType::Ident("five".to_string()), "five"),
+            (TokenType::Ident, "five"),
             (TokenType::Assign, "="),
-            (TokenType::Int(5), "5"),
+            (TokenType::Int, "5"),
             (TokenType::Semicolon, ";"),
             (TokenType::EOF, ""),
         ];
@@ -178,12 +178,9 @@ pub mod test {
         let input = "let five_dot_zero = 5.0;";
         let tokens = vec![
             (TokenType::Let, "let"),
-            (
-                TokenType::Ident("five_dot_zero".to_string()),
-                "five_dot_zero",
-            ),
+            (TokenType::Ident, "five_dot_zero"),
             (TokenType::Assign, "="),
-            (TokenType::Float(5.0), "5.0"),
+            (TokenType::Float, "5.0"),
             (TokenType::Semicolon, ";"),
             (TokenType::EOF, ""),
         ];
@@ -218,56 +215,56 @@ if (5 < 10) {
         "#;
         let tokens = vec![
             (TokenType::Let, "let"),
-            (TokenType::Ident("five".to_string()), "five"),
+            (TokenType::Ident, "five"),
             (TokenType::Assign, "="),
-            (TokenType::Int(5), "5"),
+            (TokenType::Int, "5"),
             (TokenType::Semicolon, ";"),
             (TokenType::Let, "let"),
-            (TokenType::Ident("ten".to_string()), "ten"),
+            (TokenType::Ident, "ten"),
             (TokenType::Assign, "="),
-            (TokenType::Int(10), "10"),
+            (TokenType::Int, "10"),
             (TokenType::Semicolon, ";"),
             (TokenType::Let, "let"),
-            (TokenType::Ident("add".to_string()), "add"),
+            (TokenType::Ident, "add"),
             (TokenType::Assign, "="),
             (TokenType::Fn, "fn"),
             (TokenType::LParen, "("),
-            (TokenType::Ident("x".to_string()), "x"),
+            (TokenType::Ident, "x"),
             (TokenType::Comma, ","),
-            (TokenType::Ident("y".to_string()), "y"),
+            (TokenType::Ident, "y"),
             (TokenType::RParen, ")"),
             (TokenType::LBrace, "{"),
-            (TokenType::Ident("x".to_string()), "x"),
+            (TokenType::Ident, "x"),
             (TokenType::Plus, "+"),
-            (TokenType::Ident("y".to_string()), "y"),
+            (TokenType::Ident, "y"),
             (TokenType::Semicolon, ";"),
             (TokenType::RBrace, "}"),
             (TokenType::Semicolon, ";"),
             (TokenType::Let, "let"),
-            (TokenType::Ident("result".to_string()), "result"),
+            (TokenType::Ident, "result"),
             (TokenType::Assign, "="),
-            (TokenType::Ident("add".to_string()), "add"),
+            (TokenType::Ident, "add"),
             (TokenType::LParen, "("),
-            (TokenType::Ident("five".to_string()), "five"),
+            (TokenType::Ident, "five"),
             (TokenType::Comma, ","),
-            (TokenType::Ident("ten".to_string()), "ten"),
+            (TokenType::Ident, "ten"),
             (TokenType::RParen, ")"),
             (TokenType::Semicolon, ";"),
             (TokenType::Bang, "!"),
             (TokenType::Minus, "-"),
             (TokenType::Slash, "/"),
             (TokenType::Asterisk, "*"),
-            (TokenType::Int(5), "5"),
+            (TokenType::Int, "5"),
             (TokenType::Semicolon, ";"),
-            (TokenType::Int(5), "5"),
+            (TokenType::Int, "5"),
             (TokenType::LT, "<"),
-            (TokenType::Int(10), "10"),
+            (TokenType::Int, "10"),
             (TokenType::Semicolon, ";"),
             (TokenType::If, "if"),
             (TokenType::LParen, "("),
-            (TokenType::Int(5), "5"),
+            (TokenType::Int, "5"),
             (TokenType::LT, "<"),
-            (TokenType::Int(10), "10"),
+            (TokenType::Int, "10"),
             (TokenType::RParen, ")"),
             (TokenType::LBrace, "{"),
             (TokenType::Return, "return"),
@@ -280,13 +277,13 @@ if (5 < 10) {
             (TokenType::False, "false"),
             (TokenType::Semicolon, ";"),
             (TokenType::RBrace, "}"),
-            (TokenType::Int(10), "10"),
+            (TokenType::Int, "10"),
             (TokenType::EQ, "=="),
-            (TokenType::Int(10), "10"),
+            (TokenType::Int, "10"),
             (TokenType::Semicolon, ";"),
-            (TokenType::Int(10), "10"),
+            (TokenType::Int, "10"),
             (TokenType::NotEQ, "!="),
-            (TokenType::Int(9), "9"),
+            (TokenType::Int, "9"),
             (TokenType::Semicolon, ";"),
             (TokenType::EOF, ""),
         ];

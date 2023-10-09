@@ -73,7 +73,6 @@ impl Repl {
             let mut input = String::new();
             self.reader.read_line(&mut input).unwrap();
 
-            // check to see if the input is a command
             if let Ok(command) = input.trim().parse::<Commands>() {
                 command.handle();
                 continue;
