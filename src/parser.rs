@@ -7,6 +7,7 @@ pub struct Parser<'a> {
     lexer: &'a mut Lexer,
     cur_token: Token,
     peek_token: Token,
+    errors: Vec<String>,
 }
 
 impl<'a> Parser<'a> {
@@ -15,6 +16,7 @@ impl<'a> Parser<'a> {
             lexer,
             cur_token: Token::new(TokenType::EOF, "".to_string()),
             peek_token: Token::new(TokenType::EOF, "".to_string()),
+            errors: Vec::new(),
         };
         // Read two tokens, so cur_token and peek_token are both set
         p.next_token();
@@ -22,16 +24,24 @@ impl<'a> Parser<'a> {
         p
     }
 
+    fn peek_error(&mut self, token_type: &TokenType) {
+        let msg = format!(
+            "expected next token to be '{}', got '{}' instead",
+            token_type, self.peek_token.token_type
+        );
+        self.errors.push(msg);
+    }
     fn next_token(&mut self) {
         self.cur_token = self.peek_token.clone();
         self.peek_token = self.lexer.next_token();
     }
 
     fn expect_peek(&mut self, token_type: TokenType) -> bool {
-        if self.peek_token_is(token_type) {
+        if self.peek_token_is(&token_type) {
             self.next_token();
             true
         } else {
+            self.peek_error(&token_type);
             false
         }
     }
@@ -40,11 +50,11 @@ impl<'a> Parser<'a> {
         self.cur_token.token_type == token_type
     }
 
-    fn peek_token_is(&self, token_type: TokenType) -> bool {
-        self.peek_token.token_type == token_type
+    fn peek_token_is(&self, token_type: &TokenType) -> bool {
+        self.peek_token.token_type == *token_type
     }
 
-    fn parse_program(&mut self) -> ast::Program {
+    fn parse(&mut self) -> ast::Program {
         let mut program = ast::Program::new();
 
         while self.cur_token.token_type != TokenType::EOF {
@@ -76,6 +86,8 @@ impl<'a> Parser<'a> {
             return None;
         }
 
+        // TODO: We're skipping the expressions until we
+        // encounter a semicolon
         while !self.cur_token_is(TokenType::Semicolon) {
             self.next_token();
         }
@@ -94,13 +106,23 @@ pub mod test {
         let input = r#"
         let x = 5;
         let y = 10;
-        let foobar = 838383;
+        let a = 838383;
         "#;
 
         let lexer = &mut crate::lexer::Lexer::new(input);
         let mut parser = super::Parser::new(lexer);
 
-        let p = parser.parse_program();
+        let p = parser.parse();
+
+        if !parser.errors.is_empty() {
+            println!("parser has {} errors", parser.errors.len());
+            for error in parser.errors {
+                println!("parser error: {}", error);
+            }
+            panic!();
+        }
+
+        println!("{:?}", p);
 
         assert_eq!(p.statements.len(), 3);
     }

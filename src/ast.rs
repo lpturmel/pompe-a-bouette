@@ -1,6 +1,8 @@
+use std::fmt::Debug;
+
 use crate::token;
 
-pub trait Node {
+pub trait Node: Debug {
     fn token_literal(&self) -> &str;
 }
 
@@ -12,7 +14,7 @@ pub trait Expression: Node {
     fn expression_node(&self);
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Program {
     pub statements: Vec<Box<dyn Statement>>,
 }
@@ -33,6 +35,7 @@ impl Node for Program {
     }
 }
 
+#[derive(Debug)]
 pub struct LetStatement {
     token: token::Token,
     name: Identifier,
@@ -54,6 +57,7 @@ impl Statement for LetStatement {
     fn statement_node(&self) {}
 }
 
+#[derive(Debug)]
 pub struct Identifier {
     token: token::Token,
     value: String,

@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
@@ -62,4 +64,45 @@ pub enum TokenType {
     If,
     Else,
     Return,
+}
+
+impl Display for TokenType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            // Misc
+            Self::Illegal => "Illegal",
+            Self::EOF => "EOF",
+            Self::Ident => "Ident",
+            Self::Int => "Int",
+            Self::Float => "Float",
+            // Operators
+            Self::Assign => "=",
+            Self::Plus => "+",
+            Self::Minus => "-",
+            Self::Bang => "!",
+            Self::Asterisk => "*",
+            Self::Slash => "/",
+            Self::LT => "<",
+            Self::GT => ">",
+            Self::EQ => "==",
+            Self::NotEQ => "!=",
+            // Delimiters
+            Self::Comma => ",",
+            Self::Semicolon => ";",
+            Self::LParen => "(",
+            Self::RParen => ")",
+            Self::LBrace => "{",
+            Self::RBrace => "}",
+            // Keywords
+            Self::Fn => "fn",
+            Self::Let => "let",
+            Self::Mut => "mut",
+            Self::True => "true",
+            Self::False => "false",
+            Self::If => "if",
+            Self::Else => "else",
+            Self::Return => "return",
+        };
+        write!(f, "{}", s)
+    }
 }
