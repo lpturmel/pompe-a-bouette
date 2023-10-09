@@ -15,7 +15,7 @@ impl Commands {
     fn handle(&self) {
         match self {
             Self::Exit => {
-                println!("Bye!");
+                println!("Bye! ⛽️");
                 std::process::exit(0);
             }
             Self::Help => {
@@ -32,8 +32,8 @@ impl FromStr for Commands {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "exit" => Ok(Self::Exit),
-            "help" => Ok(Self::Help),
+            ".exit" => Ok(Self::Exit),
+            ".help" => Ok(Self::Help),
             _ => Err(format!("Unknown command: {}", s)),
         }
     }
@@ -62,6 +62,7 @@ impl Repl {
             r#"
             Welcome to Pompe a Bouette {}
             This is the interactive REPL.
+            Type .help for more information.
             "#,
             env!("CARGO_PKG_VERSION")
         );
