@@ -8,15 +8,15 @@ pub struct Parser<'a> {
     cur_token: Token,
     peek_token: Token,
     errors: Vec<String>,
-    pub token_count: usize,
+    token_count: usize,
 }
 
 impl<'a> Parser<'a> {
     pub fn new(lexer: Lexer<'a>) -> Self {
         let mut p = Self {
             lexer,
-            cur_token: Token::new(TokenType::EOF, 0, 0),
-            peek_token: Token::new(TokenType::EOF, 0, 0),
+            cur_token: Token::new(TokenType::EOF, 0, 0, 1),
+            peek_token: Token::new(TokenType::EOF, 0, 0, 1),
             errors: Vec::new(),
             token_count: 0,
         };
@@ -26,14 +26,17 @@ impl<'a> Parser<'a> {
         p
     }
 
+    pub fn token_count(&self) -> usize {
+        self.token_count
+    }
     pub fn errors(&self) -> &[String] {
         &self.errors
     }
 
     fn peek_error(&mut self, token_type: &TokenType) {
         let msg = format!(
-            "expected next token to be '{}', got '{}' instead",
-            token_type, self.peek_token.token_type
+            "line {}: expected next token to be '{}', got '{}' instead",
+            self.peek_token.line, token_type, self.peek_token.token_type
         );
         self.errors.push(msg);
     }
@@ -181,5 +184,36 @@ pub mod test {
         }
 
         assert_eq!(p.statements.len(), 518400);
+    }
+    #[test]
+    fn test_line_nb_error() {
+        let input = r#"let x = 5;
+let = 10;"#;
+
+        let lexer = crate::lexer::Lexer::new(input);
+        let mut parser = super::Parser::new(lexer);
+
+        let p = parser.parse();
+
+        assert_eq!(parser.errors.len(), 1);
+        assert_eq!(
+            parser.errors[0],
+            "line 2: expected next token to be 'Ident', got '=' instead"
+        );
+    }
+    #[test]
+    fn test_line_nb_error_file() {
+        let input = std::fs::read_to_string("input/line_nb_error.pab").unwrap();
+
+        let lexer = crate::lexer::Lexer::new(&input);
+        let mut parser = super::Parser::new(lexer);
+
+        let p = parser.parse();
+
+        assert_eq!(parser.errors.len(), 1);
+        assert_eq!(
+            parser.errors[0],
+            "line 223: expected next token to be 'Ident', got 'Int' instead"
+        );
     }
 }

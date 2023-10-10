@@ -5,17 +5,19 @@ pub struct Token {
     pub token_type: TokenType,
     pub start: usize,
     pub end: usize,
+    pub line: usize,
 }
 impl Token {
-    pub fn new(token_type: TokenType, start: usize, end: usize) -> Self {
+    pub fn new(token_type: TokenType, start: usize, end: usize, line: usize) -> Self {
         Self {
             token_type,
             start,
             end,
+            line,
         }
     }
     /// Lookup an identifier and return the corresponding token type
-    pub fn lookup_ident(ident: &str, start: usize, end: usize) -> Self {
+    pub fn lookup_ident(ident: &str, start: usize, end: usize, line: usize) -> Self {
         let token_type = match ident {
             "fn" => TokenType::Fn,
             "let" => TokenType::Let,
@@ -27,7 +29,7 @@ impl Token {
             "return" => TokenType::Return,
             _ => TokenType::Ident,
         };
-        Self::new(token_type, start, end)
+        Self::new(token_type, start, end, line)
     }
 }
 #[derive(Debug, PartialEq, Clone)]

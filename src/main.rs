@@ -35,11 +35,16 @@ fn run() -> Result<(), Error> {
 
         let lexer = Lexer::new(&input);
         let mut parser = parser::Parser::new(lexer);
+
         let now = std::time::Instant::now();
         let _ = parser.parse();
+
+        for error in parser.errors() {
+            println!("parser error: {}", error);
+        }
         println!(
             "parsing {} tokens took {:?}",
-            parser.token_count,
+            parser.token_count(),
             now.elapsed()
         );
     } else {

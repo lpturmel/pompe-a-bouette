@@ -7,6 +7,7 @@ pub struct Lexer<'a> {
     position: usize,
     read_position: usize,
     ch: char,
+    line: usize,
 }
 
 impl<'a> Lexer<'a> {
@@ -17,6 +18,7 @@ impl<'a> Lexer<'a> {
             position: 0,
             read_position: 0,
             ch: '\0',
+            line: 1,
         };
         l.read_char();
         l
@@ -25,6 +27,9 @@ impl<'a> Lexer<'a> {
     fn read_char(&mut self) {
         self.ch = self.chars.next().unwrap_or('\0');
         self.position = self.read_position;
+        if self.ch == '\n' {
+            self.line += 1;
+        }
         self.read_position += 1;
     }
 
@@ -56,7 +61,7 @@ impl<'a> Lexer<'a> {
             TokenType::Int
         };
 
-        Token::new(token_type, position, self.position)
+        Token::new(token_type, position, self.position, self.line)
     }
 
     /// Consume the input and return the next token
@@ -70,9 +75,9 @@ impl<'a> Lexer<'a> {
                 if self.peek_char() == '=' {
                     self.read_char();
                     end_pos = self.read_position;
-                    Token::new(TokenType::EQ, start_pos, end_pos)
+                    Token::new(TokenType::EQ, start_pos, end_pos, self.line)
                 } else {
-                    Token::new(TokenType::Assign, start_pos, end_pos)
+                    Token::new(TokenType::Assign, start_pos, end_pos, self.line)
                 }
             }
             '!' => {
@@ -80,31 +85,31 @@ impl<'a> Lexer<'a> {
                     self.read_char();
                     end_pos = self.read_position;
 
-                    Token::new(TokenType::NotEQ, start_pos, end_pos)
+                    Token::new(TokenType::NotEQ, start_pos, end_pos, self.line)
                 } else {
-                    Token::new(TokenType::Bang, start_pos, end_pos)
+                    Token::new(TokenType::Bang, start_pos, end_pos, self.line)
                 }
             }
-            ';' => Token::new(TokenType::Semicolon, start_pos, end_pos),
-            '(' => Token::new(TokenType::LParen, start_pos, end_pos),
-            ')' => Token::new(TokenType::RParen, start_pos, end_pos),
-            ',' => Token::new(TokenType::Comma, start_pos, end_pos),
-            '+' => Token::new(TokenType::Plus, start_pos, end_pos),
-            '-' => Token::new(TokenType::Minus, start_pos, end_pos),
-            '/' => Token::new(TokenType::Slash, start_pos, end_pos),
-            '*' => Token::new(TokenType::Asterisk, start_pos, end_pos),
-            '<' => Token::new(TokenType::LT, start_pos, end_pos),
-            '>' => Token::new(TokenType::GT, start_pos, end_pos),
-            '{' => Token::new(TokenType::LBrace, start_pos, end_pos),
-            '}' => Token::new(TokenType::RBrace, start_pos, end_pos),
-            '\0' => Token::new(TokenType::EOF, start_pos, start_pos), // end pos is the same as start pos as there is no next char
+            ';' => Token::new(TokenType::Semicolon, start_pos, end_pos, self.line),
+            '(' => Token::new(TokenType::LParen, start_pos, end_pos, self.line),
+            ')' => Token::new(TokenType::RParen, start_pos, end_pos, self.line),
+            ',' => Token::new(TokenType::Comma, start_pos, end_pos, self.line),
+            '+' => Token::new(TokenType::Plus, start_pos, end_pos, self.line),
+            '-' => Token::new(TokenType::Minus, start_pos, end_pos, self.line),
+            '/' => Token::new(TokenType::Slash, start_pos, end_pos, self.line),
+            '*' => Token::new(TokenType::Asterisk, start_pos, end_pos, self.line),
+            '<' => Token::new(TokenType::LT, start_pos, end_pos, self.line),
+            '>' => Token::new(TokenType::GT, start_pos, end_pos, self.line),
+            '{' => Token::new(TokenType::LBrace, start_pos, end_pos, self.line),
+            '}' => Token::new(TokenType::RBrace, start_pos, end_pos, self.line),
+            '\0' => Token::new(TokenType::EOF, start_pos, start_pos, self.line), // end pos is the same as start pos as there is no next char
             _ => {
                 if self.is_letter() {
                     return self.read_identifier();
                 } else if self.is_number() {
                     return self.read_number();
                 } else {
-                    return Token::new(TokenType::Illegal, start_pos, end_pos);
+                    return Token::new(TokenType::Illegal, start_pos, end_pos, self.line);
                 }
             }
         };
@@ -132,7 +137,7 @@ impl<'a> Lexer<'a> {
             self.read_char();
         }
         let literal = &self.input[position..self.position];
-        Token::lookup_ident(literal, position, self.position)
+        Token::lookup_ident(literal, position, self.position, self.line)
     }
 }
 
