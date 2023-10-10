@@ -1,19 +1,6 @@
 use crate::token;
 use std::fmt::Debug;
 
-// pub trait Node: Debug {
-//     fn token_literal(&self) -> &str;
-// }
-
-// pub trait Statement: Node {
-//     fn statement_node(&self);
-//     fn is_mut(&self) -> bool;
-// }
-//
-// pub trait Expression: Node {
-//     fn expression_node(&self);
-// }
-
 #[derive(Default, Debug)]
 pub struct Program {
     pub statements: Vec<Statement>,
@@ -38,16 +25,6 @@ impl Program {
     }
 }
 
-// impl Node for Program<'_> {
-//     fn token_literal(&self) -> &str {
-//         if !self.statements.is_empty() {
-//             self.statements[0].token_literal()
-//         } else {
-//             ""
-//         }
-//     }
-// }
-
 #[derive(Debug)]
 pub struct LetStatement {
     token: token::Token,
@@ -66,18 +43,6 @@ impl LetStatement {
     }
 }
 
-// impl Node for LetStatement {
-//     fn token_literal(&self) -> &str {
-//         self.token.literal.as_str()
-//     }
-// }
-// impl Statement for LetStatement {
-//     fn statement_node(&self) {}
-//     fn is_mut(&self) -> bool {
-//         self.is_mut
-//     }
-// }
-
 #[derive(Debug)]
 pub struct Identifier {
     token: token::Token,
@@ -90,13 +55,3 @@ impl Identifier {
         Self { token, start, end }
     }
 }
-
-// impl Node for Identifier {
-//     fn token_literal(&self) -> &str {
-//         self.token.literal.as_str()
-//     }
-// }
-//
-// impl Expression for Identifier {
-//     fn expression_node(&self) {}
-// }
