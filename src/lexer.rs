@@ -28,6 +28,7 @@ impl<'a> Lexer<'a> {
         self.read_position += 1;
     }
 
+    /// Return the next character without consuming it
     fn peek_char(&self) -> char {
         self.chars.clone().next().unwrap_or('\0')
     }
@@ -96,7 +97,7 @@ impl<'a> Lexer<'a> {
             '>' => Token::new(TokenType::GT, start_pos, end_pos),
             '{' => Token::new(TokenType::LBrace, start_pos, end_pos),
             '}' => Token::new(TokenType::RBrace, start_pos, end_pos),
-            '\0' => Token::new(TokenType::EOF, start_pos, start_pos), // EOF
+            '\0' => Token::new(TokenType::EOF, start_pos, start_pos), // end pos is the same as start pos as there is no next char
             _ => {
                 if self.is_letter() {
                     return self.read_identifier();
@@ -156,7 +157,6 @@ pub mod test {
         let mut l = Lexer::new(input);
         for (expected_type, expected_literal) in tokens {
             let tok = l.next_token();
-            println!("{:?}", tok);
             let literal = &input[tok.start..tok.end];
             assert_eq!(tok.token_type, expected_type);
             assert_eq!(literal, expected_literal);
@@ -203,25 +203,25 @@ pub mod test {
     #[test]
     fn test_long_assignment() {
         let input = r#"let five = 5;
-let ten = 10;
-
-let add = fn(x, y) {
-  x + y;
-};
-
-let result = add(five, ten);
-!-/*5;
-5 < 10;
-
-
-if (5 < 10) {
-    return true;
-} else {
-    return false;
-}
-10 == 10;
-10 != 9;
-        "#;
+    let ten = 10;
+    
+    let add = fn(x, y) {
+      x + y;
+    };
+    
+    let result = add(five, ten);
+    !-/*5;
+    5 < 10;
+    
+    
+    if (5 < 10) {
+        return true;
+    } else {
+        return false;
+    }
+    10 == 10;
+    10 != 9;
+            "#;
         let tokens = vec![
             (TokenType::Let, "let"),
             (TokenType::Ident, "five"),
@@ -300,7 +300,6 @@ if (5 < 10) {
         for (expected_type, expected_literal) in tokens {
             let tok = l.next_token();
             let literal = &input[tok.start..tok.end];
-            println!("Comparing {} to {}", literal, expected_literal);
             assert_eq!(tok.token_type, expected_type);
             assert_eq!(literal, expected_literal);
         }
