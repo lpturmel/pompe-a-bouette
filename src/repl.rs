@@ -1,5 +1,5 @@
 use crate::lexer::Lexer;
-use crate::token::TokenType;
+use crate::parser;
 use std::io::{self, BufRead, BufReader, Stdin, Write};
 use std::str::FromStr;
 
@@ -78,14 +78,17 @@ impl Repl {
                 continue;
             }
 
-            let mut lexer = Lexer::new(&input);
-            loop {
-                let token = lexer.next_token();
-                if token.token_type == TokenType::EOF {
-                    break;
+            let lexer = Lexer::new(&input);
+            let mut parser = parser::Parser::new(lexer);
+            let p = parser.parse();
+            if !parser.errors.is_empty() {
+                println!("parser has {} errors", parser.errors.len());
+                for error in parser.errors {
+                    println!("parser error: {}", error);
                 }
-                println!("{:?}", token);
+                panic!();
             }
+            println!("{:#?}", p.statements);
         }
     }
 }
