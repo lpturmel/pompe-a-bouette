@@ -44,7 +44,7 @@ impl<'a> Parser<'a> {
             self.next_token();
             true
         } else {
-            // self.peek_error(&token_type);
+            self.peek_error(&token_type);
             false
         }
     }
