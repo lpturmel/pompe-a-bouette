@@ -1,6 +1,5 @@
-use std::fmt::Debug;
-
 use crate::token;
+use std::fmt::Debug;
 
 pub trait Node: Debug {
     fn token_literal(&self) -> &str;
@@ -8,6 +7,7 @@ pub trait Node: Debug {
 
 pub trait Statement: Node {
     fn statement_node(&self);
+    fn is_mut(&self) -> bool;
 }
 
 pub trait Expression: Node {
@@ -15,17 +15,17 @@ pub trait Expression: Node {
 }
 
 #[derive(Default, Debug)]
-pub struct Program {
-    pub statements: Vec<Box<dyn Statement>>,
+pub struct Program<'a> {
+    pub statements: Vec<Box<dyn Statement + 'a>>,
 }
 
-impl Program {
+impl Program<'_> {
     pub fn new() -> Self {
         Self::default()
     }
 }
 
-impl Node for Program {
+impl Node for Program<'_> {
     fn token_literal(&self) -> &str {
         if !self.statements.is_empty() {
             self.statements[0].token_literal()
@@ -39,12 +39,17 @@ impl Node for Program {
 pub struct LetStatement {
     token: token::Token,
     name: Identifier,
+    is_mut: bool,
     // value: Box<dyn Expression>,
 }
 
 impl LetStatement {
-    pub fn new(token: token::Token, name: Identifier) -> Self {
-        Self { token, name }
+    pub fn new(token: token::Token, name: Identifier, is_mut: bool) -> Self {
+        Self {
+            token,
+            name,
+            is_mut,
+        }
     }
 }
 
@@ -55,6 +60,9 @@ impl Node for LetStatement {
 }
 impl Statement for LetStatement {
     fn statement_node(&self) {}
+    fn is_mut(&self) -> bool {
+        self.is_mut
+    }
 }
 
 #[derive(Debug)]
@@ -64,8 +72,11 @@ pub struct Identifier {
 }
 
 impl Identifier {
-    pub fn new(token: token::Token, value: String) -> Self {
-        Self { token, value }
+    pub fn new(token: token::Token, value: &str) -> Self {
+        Self {
+            token,
+            value: value.to_string(),
+        }
     }
 }
 

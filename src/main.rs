@@ -2,8 +2,6 @@ use clap::Parser;
 use lexer::Lexer;
 use thiserror::Error as ThisError;
 
-use crate::token::Token;
-
 pub mod ast;
 pub mod lexer;
 pub mod parser;
@@ -34,16 +32,16 @@ fn run() -> Result<(), Error> {
 
     if let Some(input_file) = cli.input_file {
         let input = std::fs::read_to_string(input_file)?;
-        let mut tokens: Vec<Token> = Vec::new();
 
-        let mut lexer = Lexer::new(&input);
-        loop {
-            let token = lexer.next_token();
-            if token.token_type == token::TokenType::EOF {
-                break;
-            }
-            tokens.push(token);
-        }
+        let lexer = Lexer::new(&input);
+        let mut parser = parser::Parser::new(lexer);
+        let now = std::time::Instant::now();
+        let _ = parser.parse();
+        println!(
+            "parsing {} tokens took {:?}",
+            parser.token_count,
+            now.elapsed()
+        );
     } else {
         let mut repl = repl::Repl::new();
         repl.start();

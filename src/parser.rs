@@ -4,19 +4,21 @@ use crate::token::{Token, TokenType};
 
 #[derive(Debug)]
 pub struct Parser<'a> {
-    lexer: &'a mut Lexer,
+    lexer: Lexer<'a>,
     cur_token: Token,
     peek_token: Token,
-    errors: Vec<String>,
+    pub errors: Vec<String>,
+    pub token_count: usize,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(lexer: &'a mut Lexer) -> Self {
+    pub fn new(lexer: Lexer<'a>) -> Self {
         let mut p = Self {
             lexer,
-            cur_token: Token::new(TokenType::EOF, "".to_string()),
-            peek_token: Token::new(TokenType::EOF, "".to_string()),
+            cur_token: Token::new(TokenType::EOF, ""),
+            peek_token: Token::new(TokenType::EOF, ""),
             errors: Vec::new(),
+            token_count: 0,
         };
         // Read two tokens, so cur_token and peek_token are both set
         p.next_token();
@@ -34,6 +36,7 @@ impl<'a> Parser<'a> {
     fn next_token(&mut self) {
         std::mem::swap(&mut self.cur_token, &mut self.peek_token);
         self.peek_token = self.lexer.next_token();
+        self.token_count += 1;
     }
 
     fn expect_peek(&mut self, token_type: TokenType) -> bool {
@@ -41,7 +44,7 @@ impl<'a> Parser<'a> {
             self.next_token();
             true
         } else {
-            self.peek_error(&token_type);
+            // self.peek_error(&token_type);
             false
         }
     }
@@ -54,7 +57,7 @@ impl<'a> Parser<'a> {
         self.peek_token.token_type == *token_type
     }
 
-    fn parse(&mut self) -> ast::Program {
+    pub fn parse(&mut self) -> ast::Program<'a> {
         let mut program = ast::Program::new();
 
         while self.cur_token.token_type != TokenType::EOF {
@@ -67,20 +70,22 @@ impl<'a> Parser<'a> {
 
         program
     }
-    fn parse_stmt(&mut self) -> Option<Box<dyn ast::Statement>> {
+    fn parse_stmt(&mut self) -> Option<Box<dyn ast::Statement + 'a>> {
         match self.cur_token.token_type {
             TokenType::Let => self.parse_let_stmt(),
             _ => None,
         }
     }
-    fn parse_let_stmt(&mut self) -> Option<Box<dyn ast::Statement>> {
+    fn parse_let_stmt(&mut self) -> Option<Box<dyn ast::Statement + 'a>> {
         let token = self.cur_token.clone();
+
+        let is_mut = self.expect_peek(TokenType::Mut);
 
         if !self.expect_peek(TokenType::Ident) {
             return None;
         }
 
-        let name = ast::Identifier::new(self.cur_token.clone(), self.cur_token.literal.clone());
+        let name = ast::Identifier::new(self.cur_token.clone(), &self.cur_token.literal);
 
         if !self.expect_peek(TokenType::Assign) {
             return None;
@@ -93,7 +98,7 @@ impl<'a> Parser<'a> {
         }
 
         Some(Box::new(LetStatement::new(
-            token, name,
+            token, name, is_mut,
             // Box::new(ast::Identifier::default()),
         )))
     }
@@ -101,6 +106,7 @@ impl<'a> Parser<'a> {
 
 #[cfg(test)]
 pub mod test {
+
     #[test]
     fn parse_let_stmt() {
         let input = r#"
@@ -109,7 +115,7 @@ pub mod test {
         let a = 838383;
         "#;
 
-        let lexer = &mut crate::lexer::Lexer::new(input);
+        let lexer = crate::lexer::Lexer::new(input);
         let mut parser = super::Parser::new(lexer);
 
         let now = std::time::Instant::now();
@@ -127,17 +133,48 @@ pub mod test {
         assert_eq!(p.statements.len(), 3);
     }
     #[test]
+    fn parse_mut_let_stmt() {
+        let input = r#"
+        let x = 3;
+        let mut y = 5;
+        y = 10;
+        "#;
+        let lexer = crate::lexer::Lexer::new(input);
+        let mut parser = super::Parser::new(lexer);
+
+        let p = parser.parse();
+
+        if !parser.errors.is_empty() {
+            println!("parser has {} errors", parser.errors.len());
+            for error in parser.errors {
+                println!("parser error: {}", error);
+            }
+            panic!();
+        }
+
+        let mut stmts = p.statements.iter();
+        let first_stmt = stmts.next().unwrap();
+        let sec_stmt = stmts.next().unwrap();
+
+        assert!(!first_stmt.is_mut());
+        assert!(sec_stmt.is_mut());
+    }
+    #[test]
     fn parse_from_file() {
         let input = std::fs::read_to_string("input/nb.pab").unwrap();
 
         println!("input chars: {}", input.chars().count());
 
-        let lexer = &mut crate::lexer::Lexer::new(&input);
+        let lexer = crate::lexer::Lexer::new(&input);
         let mut parser = super::Parser::new(lexer);
 
         let now = std::time::Instant::now();
         let p = parser.parse();
-        println!("parsing took {:?}", now.elapsed());
+        println!(
+            "parsing {} tokens took {:?}",
+            parser.token_count,
+            now.elapsed()
+        );
 
         if !parser.errors.is_empty() {
             println!("parser has {} errors", parser.errors.len());
