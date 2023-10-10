@@ -79,7 +79,11 @@ impl<'a> Parser<'a> {
     fn parse_let_stmt(&mut self) -> Option<Box<dyn ast::Statement + 'a>> {
         let token = self.cur_token.clone();
 
-        let is_mut = self.expect_peek(TokenType::Mut);
+        let is_mut = self.peek_token_is(&TokenType::Mut);
+
+        if is_mut {
+            self.next_token();
+        }
 
         if !self.expect_peek(TokenType::Ident) {
             return None;

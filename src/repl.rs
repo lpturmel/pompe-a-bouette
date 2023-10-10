@@ -81,12 +81,8 @@ impl Repl {
             let lexer = Lexer::new(&input);
             let mut parser = parser::Parser::new(lexer);
             let p = parser.parse();
-            if !parser.errors.is_empty() {
-                println!("parser has {} errors", parser.errors.len());
-                for error in parser.errors {
-                    println!("parser error: {}", error);
-                }
-                panic!();
+            for error in parser.errors {
+                println!("parser error: {}", error);
             }
             println!("{:#?}", p.statements);
         }
