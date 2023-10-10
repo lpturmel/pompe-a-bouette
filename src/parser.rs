@@ -123,19 +123,10 @@ pub mod test {
 
     #[test]
     fn parse_let_stmt() {
-        let input = r#"
-        let x = 5;
-        let y = 10;
-        let a = 838383;
-        "#;
-
+        let input = r#" let x = 5; let y = 10; let a = 838383; "#;
         let lexer = crate::lexer::Lexer::new(input);
         let mut parser = super::Parser::new(lexer);
-
-        let now = std::time::Instant::now();
         let p = parser.parse();
-        println!("parsing took {:?}", now.elapsed());
-
         if !parser.errors.is_empty() {
             println!("parser has {} errors", parser.errors.len());
             for error in parser.errors {
@@ -143,7 +134,6 @@ pub mod test {
             }
             panic!();
         }
-
         assert_eq!(p.statements.len(), 3);
     }
     #[test]
@@ -175,20 +165,12 @@ pub mod test {
     }
     #[test]
     fn parse_from_file() {
-        let input = std::fs::read_to_string("input/nb.pab").unwrap();
-
-        println!("input chars: {}", input.chars().count());
+        let input = std::fs::read_to_string("input/large.pab").unwrap();
 
         let lexer = crate::lexer::Lexer::new(&input);
         let mut parser = super::Parser::new(lexer);
 
-        let now = std::time::Instant::now();
         let p = parser.parse();
-        println!(
-            "parsing {} tokens took {:?}",
-            parser.token_count,
-            now.elapsed()
-        );
 
         if !parser.errors.is_empty() {
             println!("parser has {} errors", parser.errors.len());
@@ -198,6 +180,6 @@ pub mod test {
             panic!();
         }
 
-        assert_eq!(p.statements.len(), 2400);
+        assert_eq!(p.statements.len(), 518400);
     }
 }
