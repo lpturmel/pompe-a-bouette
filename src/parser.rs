@@ -1,4 +1,4 @@
-use crate::ast::{self, LetStatement};
+use crate::ast::{self, LetStatement, Statement};
 use crate::lexer::Lexer;
 use crate::token::{Token, TokenType};
 
@@ -7,7 +7,7 @@ pub struct Parser<'a> {
     lexer: Lexer<'a>,
     cur_token: Token,
     peek_token: Token,
-    pub errors: Vec<String>,
+    errors: Vec<String>,
     pub token_count: usize,
 }
 
@@ -15,8 +15,8 @@ impl<'a> Parser<'a> {
     pub fn new(lexer: Lexer<'a>) -> Self {
         let mut p = Self {
             lexer,
-            cur_token: Token::new(TokenType::EOF, ""),
-            peek_token: Token::new(TokenType::EOF, ""),
+            cur_token: Token::new(TokenType::EOF, 0, 0),
+            peek_token: Token::new(TokenType::EOF, 0, 0),
             errors: Vec::new(),
             token_count: 0,
         };
@@ -24,6 +24,10 @@ impl<'a> Parser<'a> {
         p.next_token();
         p.next_token();
         p
+    }
+
+    pub fn errors(&self) -> &[String] {
+        &self.errors
     }
 
     fn peek_error(&mut self, token_type: &TokenType) {
@@ -57,7 +61,7 @@ impl<'a> Parser<'a> {
         self.peek_token.token_type == *token_type
     }
 
-    pub fn parse(&mut self) -> ast::Program<'a> {
+    pub fn parse(&mut self) -> ast::Program {
         let mut program = ast::Program::new();
 
         while self.cur_token.token_type != TokenType::EOF {
@@ -70,13 +74,15 @@ impl<'a> Parser<'a> {
 
         program
     }
-    fn parse_stmt(&mut self) -> Option<Box<dyn ast::Statement + 'a>> {
+    fn parse_stmt(&mut self) -> Option<Statement> {
         match self.cur_token.token_type {
-            TokenType::Let => self.parse_let_stmt(),
+            TokenType::Let => self
+                .parse_let_stmt()
+                .map(|stmt| Statement::Let(Box::new(stmt))),
             _ => None,
         }
     }
-    fn parse_let_stmt(&mut self) -> Option<Box<dyn ast::Statement + 'a>> {
+    fn parse_let_stmt(&mut self) -> Option<LetStatement> {
         let token = self.cur_token.clone();
 
         let is_mut = self.peek_token_is(&TokenType::Mut);
@@ -89,7 +95,11 @@ impl<'a> Parser<'a> {
             return None;
         }
 
-        let name = ast::Identifier::new(self.cur_token.clone(), &self.cur_token.literal);
+        let name = ast::Identifier::new(
+            self.cur_token.clone(),
+            self.cur_token.start,
+            self.cur_token.end,
+        );
 
         if !self.expect_peek(TokenType::Assign) {
             return None;
@@ -101,10 +111,10 @@ impl<'a> Parser<'a> {
             self.next_token();
         }
 
-        Some(Box::new(LetStatement::new(
+        Some(LetStatement::new(
             token, name, is_mut,
             // Box::new(ast::Identifier::default()),
-        )))
+        ))
     }
 }
 
@@ -188,6 +198,6 @@ pub mod test {
             panic!();
         }
 
-        assert_eq!(p.statements.len(), 240);
+        assert_eq!(p.statements.len(), 2400);
     }
 }

@@ -3,6 +3,7 @@ use crate::token::{Token, TokenType};
 #[derive(Debug)]
 pub struct Lexer<'a> {
     input: &'a str,
+    chars: std::str::Chars<'a>,
     position: usize,
     read_position: usize,
     ch: char,
@@ -11,6 +12,7 @@ pub struct Lexer<'a> {
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {
         let mut l = Self {
+            chars: input.chars(),
             input,
             position: 0,
             read_position: 0,
@@ -21,13 +23,13 @@ impl<'a> Lexer<'a> {
     }
 
     fn read_char(&mut self) {
-        self.ch = self.input.chars().nth(self.read_position).unwrap_or('\0');
+        self.ch = self.chars.next().unwrap_or('\0');
         self.position = self.read_position;
         self.read_position += 1;
     }
 
     fn peek_char(&self) -> char {
-        self.input.chars().nth(self.read_position).unwrap_or('\0')
+        self.chars.clone().next().unwrap_or('\0')
     }
 
     /// Read a number and return the appropriate token
@@ -47,15 +49,13 @@ impl<'a> Lexer<'a> {
             self.read_char();
         }
 
-        let literal = &self.input[position..self.position];
-
         let token_type = if is_float {
             TokenType::Float
         } else {
             TokenType::Int
         };
 
-        Token::new(token_type, literal)
+        Token::new(token_type, position, self.position)
     }
 
     /// Consume the input and return the next token
@@ -63,44 +63,47 @@ impl<'a> Lexer<'a> {
         self.consume_whitespace();
 
         let start_pos = self.position;
-        let end_pos = self.read_position;
+        let mut end_pos = self.read_position;
         let tok = match self.ch {
             '=' => {
                 if self.peek_char() == '=' {
                     self.read_char();
-                    Token::new(TokenType::EQ, "==")
+                    end_pos = self.read_position;
+                    Token::new(TokenType::EQ, start_pos, end_pos)
                 } else {
-                    Token::new(TokenType::Assign, &self.input[start_pos..end_pos])
+                    Token::new(TokenType::Assign, start_pos, end_pos)
                 }
             }
             '!' => {
                 if self.peek_char() == '=' {
                     self.read_char();
-                    Token::new(TokenType::NotEQ, "!=")
+                    end_pos = self.read_position;
+
+                    Token::new(TokenType::NotEQ, start_pos, end_pos)
                 } else {
-                    Token::new(TokenType::Bang, &self.input[start_pos..end_pos])
+                    Token::new(TokenType::Bang, start_pos, end_pos)
                 }
             }
-            ';' => Token::new(TokenType::Semicolon, &self.input[start_pos..end_pos]),
-            '(' => Token::new(TokenType::LParen, &self.input[start_pos..end_pos]),
-            ')' => Token::new(TokenType::RParen, &self.input[start_pos..end_pos]),
-            ',' => Token::new(TokenType::Comma, &self.input[start_pos..end_pos]),
-            '+' => Token::new(TokenType::Plus, &self.input[start_pos..end_pos]),
-            '-' => Token::new(TokenType::Minus, &self.input[start_pos..end_pos]),
-            '/' => Token::new(TokenType::Slash, &self.input[start_pos..end_pos]),
-            '*' => Token::new(TokenType::Asterisk, &self.input[start_pos..end_pos]),
-            '<' => Token::new(TokenType::LT, &self.input[start_pos..end_pos]),
-            '>' => Token::new(TokenType::GT, &self.input[start_pos..end_pos]),
-            '{' => Token::new(TokenType::LBrace, &self.input[start_pos..end_pos]),
-            '}' => Token::new(TokenType::RBrace, &self.input[start_pos..end_pos]),
-            '\0' => Token::new(TokenType::EOF, ""),
+            ';' => Token::new(TokenType::Semicolon, start_pos, end_pos),
+            '(' => Token::new(TokenType::LParen, start_pos, end_pos),
+            ')' => Token::new(TokenType::RParen, start_pos, end_pos),
+            ',' => Token::new(TokenType::Comma, start_pos, end_pos),
+            '+' => Token::new(TokenType::Plus, start_pos, end_pos),
+            '-' => Token::new(TokenType::Minus, start_pos, end_pos),
+            '/' => Token::new(TokenType::Slash, start_pos, end_pos),
+            '*' => Token::new(TokenType::Asterisk, start_pos, end_pos),
+            '<' => Token::new(TokenType::LT, start_pos, end_pos),
+            '>' => Token::new(TokenType::GT, start_pos, end_pos),
+            '{' => Token::new(TokenType::LBrace, start_pos, end_pos),
+            '}' => Token::new(TokenType::RBrace, start_pos, end_pos),
+            '\0' => Token::new(TokenType::EOF, start_pos, start_pos), // EOF
             _ => {
                 if self.is_letter() {
                     return self.read_identifier();
                 } else if self.is_number() {
                     return self.read_number();
                 } else {
-                    return Token::new(TokenType::Illegal, "");
+                    return Token::new(TokenType::Illegal, start_pos, end_pos);
                 }
             }
         };
@@ -128,7 +131,7 @@ impl<'a> Lexer<'a> {
             self.read_char();
         }
         let literal = &self.input[position..self.position];
-        Token::lookup_ident(literal)
+        Token::lookup_ident(literal, position, self.position)
     }
 }
 
@@ -153,8 +156,10 @@ pub mod test {
         let mut l = Lexer::new(input);
         for (expected_type, expected_literal) in tokens {
             let tok = l.next_token();
+            println!("{:?}", tok);
+            let literal = &input[tok.start..tok.end];
             assert_eq!(tok.token_type, expected_type);
-            assert_eq!(tok.literal, expected_literal);
+            assert_eq!(literal, expected_literal);
         }
     }
     #[test]
@@ -171,8 +176,9 @@ pub mod test {
         let mut l = Lexer::new(input);
         for (expected_type, expected_literal) in tokens {
             let tok = l.next_token();
+            let literal = &input[tok.start..tok.end];
             assert_eq!(tok.token_type, expected_type);
-            assert_eq!(tok.literal, expected_literal);
+            assert_eq!(literal, expected_literal);
         }
     }
     #[test]
@@ -189,8 +195,9 @@ pub mod test {
         let mut l = Lexer::new(input);
         for (expected_type, expected_literal) in tokens {
             let tok = l.next_token();
+            let literal = &input[tok.start..tok.end];
             assert_eq!(tok.token_type, expected_type);
-            assert_eq!(tok.literal, expected_literal);
+            assert_eq!(literal, expected_literal);
         }
     }
     #[test]
@@ -292,8 +299,10 @@ if (5 < 10) {
         let mut l = Lexer::new(input);
         for (expected_type, expected_literal) in tokens {
             let tok = l.next_token();
+            let literal = &input[tok.start..tok.end];
+            println!("Comparing {} to {}", literal, expected_literal);
             assert_eq!(tok.token_type, expected_type);
-            assert_eq!(tok.literal, expected_literal);
+            assert_eq!(literal, expected_literal);
         }
     }
 }

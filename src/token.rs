@@ -3,28 +3,31 @@ use std::fmt::Display;
 #[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
-    pub literal: String,
+    pub start: usize,
+    pub end: usize,
 }
 impl Token {
-    pub fn new(token_type: TokenType, literal: &str) -> Self {
+    pub fn new(token_type: TokenType, start: usize, end: usize) -> Self {
         Self {
             token_type,
-            literal: literal.to_string(),
+            start,
+            end,
         }
     }
     /// Lookup an identifier and return the corresponding token type
-    pub fn lookup_ident(ident: &str) -> Self {
-        match ident {
-            "fn" => Self::new(TokenType::Fn, ident),
-            "let" => Self::new(TokenType::Let, ident),
-            "mut" => Self::new(TokenType::Mut, ident),
-            "true" => Self::new(TokenType::True, ident),
-            "false" => Self::new(TokenType::False, ident),
-            "if" => Self::new(TokenType::If, ident),
-            "else" => Self::new(TokenType::Else, ident),
-            "return" => Self::new(TokenType::Return, ident),
-            _ => Self::new(TokenType::Ident, ident),
-        }
+    pub fn lookup_ident(ident: &str, start: usize, end: usize) -> Self {
+        let token_type = match ident {
+            "fn" => TokenType::Fn,
+            "let" => TokenType::Let,
+            "mut" => TokenType::Mut,
+            "true" => TokenType::True,
+            "false" => TokenType::False,
+            "if" => TokenType::If,
+            "else" => TokenType::Else,
+            "return" => TokenType::Return,
+            _ => TokenType::Ident,
+        };
+        Self::new(token_type, start, end)
     }
 }
 #[derive(Debug, PartialEq, Clone)]
