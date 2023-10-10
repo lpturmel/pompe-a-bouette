@@ -79,7 +79,7 @@ impl Repl {
             }
 
             let lexer = Lexer::new(&input);
-            let mut parser = parser::Parser::new(lexer);
+            let mut parser = parser::Parser::new(lexer, "input");
             let p = parser.parse();
             for error in parser.errors() {
                 println!("parser error: {}", error);

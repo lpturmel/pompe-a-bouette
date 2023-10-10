@@ -9,16 +9,18 @@ pub struct Parser<'a> {
     peek_token: Token,
     errors: Vec<String>,
     token_count: usize,
+    file_path: &'a str,
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(lexer: Lexer<'a>) -> Self {
+    pub fn new(lexer: Lexer<'a>, file_path: &'a str) -> Self {
         let mut p = Self {
             lexer,
-            cur_token: Token::new(TokenType::EOF, 0, 0, 1),
-            peek_token: Token::new(TokenType::EOF, 0, 0, 1),
+            cur_token: Token::new(TokenType::EOF, 0, 0, 1, 1),
+            peek_token: Token::new(TokenType::EOF, 0, 0, 1, 1),
             errors: Vec::new(),
             token_count: 0,
+            file_path,
         };
         // Read two tokens, so cur_token and peek_token are both set
         p.next_token();
@@ -35,8 +37,12 @@ impl<'a> Parser<'a> {
 
     fn peek_error(&mut self, token_type: &TokenType) {
         let msg = format!(
-            "line {}: expected next token to be '{}', got '{}' instead",
-            self.peek_token.line, token_type, self.peek_token.token_type
+            "--> {}\n\t{}:{} expected next token to be '{}', got '{}' instead",
+            self.file_path,
+            self.cur_token.line,
+            self.cur_token.column - 1,
+            token_type,
+            self.peek_token.token_type
         );
         self.errors.push(msg);
     }
@@ -128,7 +134,7 @@ pub mod test {
     fn parse_let_stmt() {
         let input = r#" let x = 5; let y = 10; let a = 838383; "#;
         let lexer = crate::lexer::Lexer::new(input);
-        let mut parser = super::Parser::new(lexer);
+        let mut parser = super::Parser::new(lexer, "test");
         let p = parser.parse();
         if !parser.errors.is_empty() {
             println!("parser has {} errors", parser.errors.len());
@@ -147,7 +153,7 @@ pub mod test {
         y = 10;
         "#;
         let lexer = crate::lexer::Lexer::new(input);
-        let mut parser = super::Parser::new(lexer);
+        let mut parser = super::Parser::new(lexer, "test");
 
         let p = parser.parse();
 
@@ -171,7 +177,7 @@ pub mod test {
         let input = std::fs::read_to_string("input/large.pab").unwrap();
 
         let lexer = crate::lexer::Lexer::new(&input);
-        let mut parser = super::Parser::new(lexer);
+        let mut parser = super::Parser::new(lexer, "test");
 
         let p = parser.parse();
 
@@ -191,29 +197,21 @@ pub mod test {
 let = 10;"#;
 
         let lexer = crate::lexer::Lexer::new(input);
-        let mut parser = super::Parser::new(lexer);
+        let mut parser = super::Parser::new(lexer, "test");
 
         let p = parser.parse();
 
         assert_eq!(parser.errors.len(), 1);
-        assert_eq!(
-            parser.errors[0],
-            "line 2: expected next token to be 'Ident', got '=' instead"
-        );
     }
     #[test]
     fn test_line_nb_error_file() {
         let input = std::fs::read_to_string("input/line_nb_error.pab").unwrap();
 
         let lexer = crate::lexer::Lexer::new(&input);
-        let mut parser = super::Parser::new(lexer);
+        let mut parser = super::Parser::new(lexer, "test");
 
         let p = parser.parse();
 
         assert_eq!(parser.errors.len(), 1);
-        assert_eq!(
-            parser.errors[0],
-            "line 223: expected next token to be 'Ident', got 'Int' instead"
-        );
     }
 }

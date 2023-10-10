@@ -31,22 +31,16 @@ fn run() -> Result<(), Error> {
     let cli = Cli::parse();
 
     if let Some(input_file) = cli.input_file {
-        let input = std::fs::read_to_string(input_file)?;
+        let input = std::fs::read_to_string(&input_file)?;
 
         let lexer = Lexer::new(&input);
-        let mut parser = parser::Parser::new(lexer);
+        let mut parser = parser::Parser::new(lexer, &input_file);
 
-        let now = std::time::Instant::now();
         let _ = parser.parse();
 
         for error in parser.errors() {
-            println!("parser error: {}", error);
+            println!("parser errors:\n{}", error);
         }
-        println!(
-            "parsing {} tokens took {:?}",
-            parser.token_count(),
-            now.elapsed()
-        );
     } else {
         let mut repl = repl::Repl::new();
         repl.start();
