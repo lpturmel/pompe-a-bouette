@@ -1,17 +1,17 @@
 use crate::token::{Token, TokenType};
 
 #[derive(Debug)]
-pub struct Lexer {
-    input: String,
+pub struct Lexer<'a> {
+    input: &'a str,
     position: usize,
     read_position: usize,
     ch: char,
 }
 
-impl Lexer {
-    pub fn new(input: &str) -> Self {
+impl<'a> Lexer<'a> {
+    pub fn new(input: &'a str) -> Self {
         let mut l = Self {
-            input: input.to_string(),
+            input,
             position: 0,
             read_position: 0,
             ch: '\0',
@@ -55,50 +55,52 @@ impl Lexer {
             TokenType::Int
         };
 
-        Token::new(token_type, literal.to_string())
+        Token::new(token_type, literal)
     }
 
     /// Consume the input and return the next token
     pub fn next_token(&mut self) -> Token {
         self.consume_whitespace();
 
+        let start_pos = self.position;
+        let end_pos = self.read_position;
         let tok = match self.ch {
             '=' => {
                 if self.peek_char() == '=' {
                     self.read_char();
-                    Token::new(TokenType::EQ, "==".to_string())
+                    Token::new(TokenType::EQ, "==")
                 } else {
-                    Token::new(TokenType::Assign, self.ch.to_string())
+                    Token::new(TokenType::Assign, &self.input[start_pos..end_pos])
                 }
             }
             '!' => {
                 if self.peek_char() == '=' {
                     self.read_char();
-                    Token::new(TokenType::NotEQ, "!=".to_string())
+                    Token::new(TokenType::NotEQ, "!=")
                 } else {
-                    Token::new(TokenType::Bang, self.ch.to_string())
+                    Token::new(TokenType::Bang, &self.input[start_pos..end_pos])
                 }
             }
-            ';' => Token::new(TokenType::Semicolon, self.ch.to_string()),
-            '(' => Token::new(TokenType::LParen, self.ch.to_string()),
-            ')' => Token::new(TokenType::RParen, self.ch.to_string()),
-            ',' => Token::new(TokenType::Comma, self.ch.to_string()),
-            '+' => Token::new(TokenType::Plus, self.ch.to_string()),
-            '-' => Token::new(TokenType::Minus, self.ch.to_string()),
-            '/' => Token::new(TokenType::Slash, self.ch.to_string()),
-            '*' => Token::new(TokenType::Asterisk, self.ch.to_string()),
-            '<' => Token::new(TokenType::LT, self.ch.to_string()),
-            '>' => Token::new(TokenType::GT, self.ch.to_string()),
-            '{' => Token::new(TokenType::LBrace, self.ch.to_string()),
-            '}' => Token::new(TokenType::RBrace, self.ch.to_string()),
-            '\0' => Token::new(TokenType::EOF, "".to_string()),
+            ';' => Token::new(TokenType::Semicolon, &self.input[start_pos..end_pos]),
+            '(' => Token::new(TokenType::LParen, &self.input[start_pos..end_pos]),
+            ')' => Token::new(TokenType::RParen, &self.input[start_pos..end_pos]),
+            ',' => Token::new(TokenType::Comma, &self.input[start_pos..end_pos]),
+            '+' => Token::new(TokenType::Plus, &self.input[start_pos..end_pos]),
+            '-' => Token::new(TokenType::Minus, &self.input[start_pos..end_pos]),
+            '/' => Token::new(TokenType::Slash, &self.input[start_pos..end_pos]),
+            '*' => Token::new(TokenType::Asterisk, &self.input[start_pos..end_pos]),
+            '<' => Token::new(TokenType::LT, &self.input[start_pos..end_pos]),
+            '>' => Token::new(TokenType::GT, &self.input[start_pos..end_pos]),
+            '{' => Token::new(TokenType::LBrace, &self.input[start_pos..end_pos]),
+            '}' => Token::new(TokenType::RBrace, &self.input[start_pos..end_pos]),
+            '\0' => Token::new(TokenType::EOF, ""),
             _ => {
                 if self.is_letter() {
                     return self.read_identifier();
                 } else if self.is_number() {
                     return self.read_number();
                 } else {
-                    return Token::new(TokenType::Illegal, "".to_string());
+                    return Token::new(TokenType::Illegal, "");
                 }
             }
         };
