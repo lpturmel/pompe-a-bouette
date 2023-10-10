@@ -6,24 +6,24 @@ pub struct Token {
     pub literal: String,
 }
 impl Token {
-    pub fn new(token_type: TokenType, literal: String) -> Self {
+    pub fn new(token_type: TokenType, literal: &str) -> Self {
         Self {
             token_type,
-            literal,
+            literal: literal.to_string(),
         }
     }
     /// Lookup an identifier and return the corresponding token type
     pub fn lookup_ident(ident: &str) -> Self {
         match ident {
-            "fn" => Self::new(TokenType::Fn, ident.to_string()),
-            "let" => Self::new(TokenType::Let, ident.to_string()),
-            "mut" => Self::new(TokenType::Mut, ident.to_string()),
-            "true" => Self::new(TokenType::True, ident.to_string()),
-            "false" => Self::new(TokenType::False, ident.to_string()),
-            "if" => Self::new(TokenType::If, ident.to_string()),
-            "else" => Self::new(TokenType::Else, ident.to_string()),
-            "return" => Self::new(TokenType::Return, ident.to_string()),
-            _ => Self::new(TokenType::Ident, ident.to_string()),
+            "fn" => Self::new(TokenType::Fn, ident),
+            "let" => Self::new(TokenType::Let, ident),
+            "mut" => Self::new(TokenType::Mut, ident),
+            "true" => Self::new(TokenType::True, ident),
+            "false" => Self::new(TokenType::False, ident),
+            "if" => Self::new(TokenType::If, ident),
+            "else" => Self::new(TokenType::Else, ident),
+            "return" => Self::new(TokenType::Return, ident),
+            _ => Self::new(TokenType::Ident, ident),
         }
     }
 }
